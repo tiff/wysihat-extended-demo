@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<title>WYSIWYG Experiment</title>
+
+<style>
+form {
+  width: 800px;
+}
+
+.editor {
+  min-height: 100px;
+  margin: 5px 0;
+  padding: 2px;
+  border: 1px solid #acacac;
+  outline: none;
+  font-family: 'Lucida Grande', verdana, arial, sans-serif;
+  font-size: 12px;
+}
+
+.editor_toolbar .button {
+  margin-right: 5px;
+}
+
+.editor_toolbar .selected {
+  color: red !important;
+}
+</style>
+
+<h2>Editor:</h2>
+<form>
+  <textarea id="content"></textarea>
+</form>
+
+<h2>Browser Markup:</h2>
+<div id="browser-markup"></div>
+
+<h2>Application Markup:</h2>
+<div id="application-markup"></div>
+
+<h2>Editor Markup:</h2>
+<div id="editor-markup"></div>
+
+<script src="prototype.js" charset="utf-8"></script>
+<script src="wysihat.js" charset="utf-8"></script>
+<script>
+  /**
+   * General notes:
+   *  - textarea must have an id!
+   *  - wysiwyg input area will get the class editor and has to be styled in order to appear
+   *  - the code sets the prototype method Element.prototype.sanitizeContents, it can be used to maintain a white- or black-list.
+   *    It's currently not used in the wysihat.js
+   *    Example: $("content_editor").sanitizeContents({ allow: "div[class], img[src][alt]" });
+   *    
+   */
+  var editor = WysiHat.Editor.attach("content"),
+      toolbar = new WysiHat.Toolbar(editor);
+  /**
+   * Default button set
+   * [
+   *    { label: "Bold" },
+   *    { label: "Underline" },
+   *    { label: "Italic" }
+   * ]
+   */
+  toolbar.addButtonSet([
+    { name: "bold", label: "Strong" },
+    /**
+     * Note: When no name is given the library will try to use the lowercased label
+     */
+    { label: "Underline" },
+    { label: "Italic" },
+    {
+      label: "Unordered List",
+      handler: function() { editor.toggleUnorderedList(); },
+      query: function() { return editor.unorderedListSelected(); }
+    },
+    {
+      label: "Ordered List",
+      handler: function() { editor.toggleOrderedList(); },
+      query: function() { return editor.orderedListSelected(); }
+    },
+    {
+      label: "Insert image",
+      handler: function() {
+        editor.insertImage(
+          prompt("Please provide an image url:", "http://www.cynical-c.com/archives/bloggraphics/hitler_cats_10.jpg")
+        );
+      }
+    },
+    /**
+     * It seems that firefox can't insert links without having text selected
+     */
+    {
+      label: "Insert link",
+      handler: function() {
+        if (editor.linkSelected()) {
+          if (confirm("Remove link?")) {
+            editor.unlinkSelection();
+          }
+        } else {
+          editor.linkSelection(prompt("Enter a URL", "http://www.google.com/"));
+        }
+      },
+      query: function() { return editor.linkSelected(); }
+    },
+    /**
+     * It seems that firefox can't justify text that is in the first line
+     */
+    {
+      label: "Justify",
+      handler: function() {
+        editor.alignSelection(
+          prompt("Justify in which direction? (right, left, center)", "right")
+        );
+      },
+      query: function() { return editor.alignSelected(); } // <-- This sems to be always true!
+    },
+    {
+      label: "Color",
+      handler: function() {
+        editor.colorSelection(
+          prompt("Which color?", "green")
+        );
+      }
+    },
+    {
+      label: "Background color",
+      handler: function() {
+        editor.backgroundColorSelection(
+          prompt("Which color?", "grey")
+        );
+      }
+    }
+  ]);
+  
+  /**
+   * Created contenteditable=true element will get the same id as the textarea + "_editor"
+   */
+  var editorElement = $("content_editor");
+  editorElement.focus();
+  
+  setInterval(function() {
+    $("browser-markup").innerHTML = WysiHat.Formatting.getBrowserMarkupFrom(editorElement.innerHTML).escapeHTML();
+    $("application-markup").innerHTML = WysiHat.Formatting.getApplicationMarkupFrom(editorElement).escapeHTML();
+    $("editor-markup").innerHTML = editorElement.innerHTML.escapeHTML();
+  }, 500);
+</script>
