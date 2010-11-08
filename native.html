@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<title>WYSIWYG Experiment</title>
+
+<style>
+.editor {
+  min-height: 100px;
+  margin: 5px 0;
+  padding: 2px;
+  border: 1px solid #acacac;
+  font-family: verdana, arial, sans-serif;
+  font-size: 12px;
+}
+</style>
+
+<h2>Native Editor:</h2>
+<div class="editor" id="editor" contenteditable="true"></div>
+
+<h2>Editor Markup:</h2>
+<div id="editor-markup"></div>
+
+<script src="prototype.js" charset="utf-8"></script>
+<script>
+  var editor = $("editor"),
+      editorMarkup = $("editor-markup");
+  setInterval(function() {
+    editorMarkup.innerHTML = editor.innerHTML.escapeHTML();
+  }, 500);
+</script>
